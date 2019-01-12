@@ -17,6 +17,7 @@ var commentRoutes = require("./routes/comments"),
     indexRoutes = require ("./routes/index");
 
 // mongoose.connect('mongodb://localhost:27017/yelp_camp');
+// backup
 var url = process.env.DATABASEURL || "mongodb://localhost/yelp_camp"
 mongoose.connect(url);
 
@@ -29,7 +30,7 @@ app.use(flash());
 
 // Passport configuration
 app.use(require("express-session")({
-    secret: "Once again Corgie the cutest dog",
+    secret: "Once again Corgi the cutest dog",
     resave: false,
     saveUninitialized: false
 }));
