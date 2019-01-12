@@ -31,3 +31,18 @@ NEW    /dogs/new   GET     Display form to make a new dog
 CREATE   /dogs     POST    Add new dog to DB
 SHOW    /dogs/:id  GET     Shows info about one dog
 
+# Refactor Mongoose Code
+
+# Comment model
+
+# Comment New / Create
+- Nested routes
+- add the comment new and create rputes
+- add the new comment form
+
+NEW     campgrounds/:id/comments/neww   GET
+CREATE  campgrounds/:id/comments        POST
+
+# Styling
+
+# Authentication

@@ -1,88 +1,53 @@
 var express = require("express"),
     app = express(),
     bodyParser = require("body-parser"),
-    mongoose = require ("mongoose");
+    mongoose = require ("mongoose"),
+    flash = require("connect-flash"),
+    passport = require("passport"),
+    LocalStrategy = require("passport-local"),
+    methodOverride = require("method-override"),
+    Campground = require("./models/campground"),
+    Comment = require("./models/comment"),
+    User = require("./models/user"),
+    seedDB = require("./seeds");
 
-mongoose.connect('mongodb://localhost:27017/yelp_camp', { useNewUrlParser: true });
-// mongoose.connect("mongodb://localhost/yelp_camp");
+// requiring routes
+var commentRoutes = require("./routes/comments"),
+    campgroundRoutes = require("./routes/campgrounds"),
+    indexRoutes = require ("./routes/index");
+
+// mongoose.connect('mongodb://localhost:27017/yelp_camp', { useNewUrlParser: true });
+mongoose.connect("mongodb://SK:sklee97@ds119489.mlab.com:19489/webdev_yelpcamp");
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
+app.use(express.static(__dirname + "/public"));
+app.use(methodOverride("_method"));
+app.use(flash());
+//seedDB(); // seed the database
 
-//Schema Setup
-var campgroundSchema = new mongoose.Schema({
-    name: String,
-    image: String,
-    description: String
+// Passport configuration
+app.use(require("express-session")({
+    secret: "Once again Corgie the cutest dog",
+    resave: false,
+    saveUninitialized: false
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+app.use(function(req, res, next){
+    res.locals.currentUser = req.user;
+    res.locals.error = req.flash("error");
+    res.locals.success = req.flash("success");
+    next();
 });
 
-//Compiling schema into the model
-var Campground = mongoose.model("Campground", campgroundSchema);
- 
-// Campground.create(
-//     {
-//         name: "Granite Hill", 
-//         image: "https://pixabay.com/get/e83db7082af3043ed1584d05fb1d4e97e07ee3d21cac104491f3c370a0ecbdbe_340.jpg",
-//         description: "No water"
-//     }, 
-//     function(err, campground){
-//     if (err){
-//         console.log(err);
-//     }else {
-//         console.log("NEWLY CREATED CAMPGROUND: ");
-//         console.log(campground);
-//     }
-// });
-
-app.get("/", function(req, res){
-    res.render("landing");
-});
-
-// INDEX
-app.get("/campgrounds", function(req, res){
-    // Get all campgrounds. from DB
-    Campground.find({}, function(err, allCampgrounds){
-        if (err){
-            console.log(err);
-        } else {
-            res.render("index", {campgrounds:allCampgrounds});    
-        }
-    });
-});
-
-// CREATE
-app.post("/campgrounds", function(req, res){
-    // get data from form and add to campgrounds array
-    var name = req.body.name;
-    var image = req.body.image;
-    var desc = req.body.description;
-    var newCampground = {name: name, image: image, description: desc}
-    // Create a new campground and save to DB
-    Campground.create(newCampground, function(err, newlyCreated){
-        if (err){
-            console.log(err);
-        } else {
-            // redirect ack to campgrounds page
-            res.redirect("/campgrounds")
-        }
-    })  
-});
-
-// NEW
-app.get("/campgrounds/new", function(req, res){
-    res.render("new.ejs");
-});
-
-//SHOW
-app.get("/campgrounds/:id", function(req, res){
-    Campground.findById(req.params.id, function(err, foundCampground){
-        if (err){
-            console.log(err);
-        } else {
-            res.render("show", {campground: foundCampground});
-        }
-    });
-    req.params.id
-});
+app.use("/", indexRoutes);
+app.use("/campgrounds", campgroundRoutes);
+app.use("/campgrounds/:id/comments", commentRoutes);
 
 app.listen(3000, function(){
     console.log("The Yelpcamp server has started!");
